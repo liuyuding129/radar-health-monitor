@@ -4,6 +4,8 @@
 >
 > 无感颐养 — 基于边缘AI的模块化非接触中医智能健康看护装备 · CRAIC 第二十八届中国机器人及人工智能大赛 · 医疗健康装备赛道
 
+> ⚠️ **Disclaimer**: This project has been submitted to multiple academic competitions. If you are participating in the same or similar competitions, please do NOT copy or reuse the code, documentation, or ideas directly. Use it only as a reference for learning purposes.
+
 ## 项目简介
 
 无感颐养是一套基于毫米波雷达的非接触式中医智能健康看护系统。通过 60GHz/24GHz 双雷达非接触采集心率、呼吸、步态等 10 维体征数据，结合**知识驱动规则引擎（70%）+ 数据驱动 ML 模型（30%）**双引擎 AI 架构，实现三分类中医健康辨证，输出综合评分与个性化养生建议。
@@ -133,4 +135,4 @@ npm run dev
 
 ## License
 
-MIT
+[GNU GPLv3](LICENSE)
