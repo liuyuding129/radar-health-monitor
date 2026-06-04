@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lz.radar.mapper.IotDeviceMapper">
+
+    <!--  查询所有设备信息  -->
+    <select id="selectAllDevices" resultType="com.lz.radar.domain.IotDevice">
+        SELECT * FROM iot_device ORDER BY create_time DESC
+    </select>
+
+    <!--  根据设备ID查询设备信息  -->
+    <select id="selectDeviceById" resultType="com.lz.radar.domain.IotDevice"
+            parameterType="java.lang.Long">
+        SELECT * FROM iot_device WHERE device_id = #{deviceId}
+    </select>
+
+    <!--  根据设备编码查询设备信息  -->
+    <select id="selectDeviceByCode" resultType="com.lz.radar.domain.IotDevice"
+            parameterType="java.lang.String">
+        SELECT * FROM iot_device WHERE device_code = #{deviceCode}
+    </select>
+
+    <!--  根据设备状态查询设备列表  -->
+    <select id="selectDevicesByStatus" resultType="com.lz.radar.domain.IotDevice"
+            parameterType="java.lang.String">
+        SELECT * FROM iot_device WHERE status = #{status}
+    </select>
+
+    <!--  统计设备数量  -->
+    <select id="countDevices" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM iot_device
+    </select>
+
+    <!--  根据协议ID查询使用该协议的设备列表  -->
+    <select id="selectDevicesByProtocolId" resultType="com.lz.radar.domain.IotDevice"
+            parameterType="java.lang.Long">
+        SELECT * FROM iot_device WHERE protocol_id = #{protocolId}
+    </select>
+
+    <!--  根据协议ID获取设备列表  -->
+    <select id="getDevicesByProtocolIdOrStatus" resultType="com.lz.radar.domain.IotDevice">
+        SELECT * FROM iot_device WHERE protocol_id = #{protocolId}
+    </select>
+
+    <!--  插入新设备信息  -->
+    <insert id="insertDevice" parameterType="com.lz.radar.domain.IotDevice">
+        INSERT INTO iot_device
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deviceId != null">device_id,</if>
+            <if test="deviceName != null">device_name,</if>
+            <if test="deviceCode != null">device_code,</if>
+            <if test="deviceType != null">device_type,</if>
+            <if test="status != null">status,</if>
+            <if test="location != null">location,</if>
+            <if test="protocolId != null">protocol_id,</if>
+            create_time
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="deviceId != null">#{deviceId},</if>
+            <if test="deviceName != null">#{deviceName},</if>
+            <if test="deviceCode != null">#{deviceCode},</if>
+            <if test="deviceType != null">#{deviceType},</if>
+            <if test="status != null">#{status},</if>
+            <if test="location != null">#{location},</if>
+            <if test="protocolId != null">#{protocolId},</if>
+            CURRENT_TIMESTAMP
+        </trim>
+    </insert>
+
+    <!--  更新设备信息  -->
+    <update id="updateDevice" parameterType="com.lz.radar.domain.IotDevice">
+        UPDATE iot_device
+        <set>
+            <if test="deviceName != null">device_name = #{deviceName},</if>
+            <if test="deviceType != null">device_type = #{deviceType},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="location != null">location = #{location},</if>
+            <if test="protocolId != null">protocol_id = #{protocolId},</if>
+            update_time = CURRENT_TIMESTAMP
+        </set>
+        WHERE device_id = #{deviceId}
+    </update>
+
+    <!--  更新设备状态  -->
+    <update id="updateDeviceStatus" parameterType="com.lz.radar.domain.IotDevice">
+        UPDATE iot_device SET status = #{status}, update_time = CURRENT_TIMESTAMP WHERE device_id = #{deviceId}
+    </update>
+
+    <update id="updateDeviceProtocol" parameterType="com.lz.radar.domain.dto.DeviceProtocolDto">
+        UPDATE iot_device SET protocol_id = #{protocolId}, update_time = CURRENT_TIMESTAMP WHERE device_id = #{deviceId}
+    </update>
+
+    <!--  根据设备ID删除设备  -->
+    <delete id="deleteDeviceById" parameterType="java.lang.Long">
+        DELETE FROM iot_device WHERE device_id = #{deviceId}
+    </delete>
+</mapper>

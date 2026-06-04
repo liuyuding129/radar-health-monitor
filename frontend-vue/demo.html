@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>悬丝辨息 · 基于毫米波雷达的中医智能健康监测平台</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  color: #e0e0e0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  min-height: 100vh;
+}
+
+/* 水墨背景 */
+.ink-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(212,162,78,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(201,64,67,0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(58,107,140,0.03) 0%, transparent 60%),
+    linear-gradient(135deg, #0f0f14 0%, #16161e 30%, #1a1520 60%, #0f0f14 100%);
+}
+
+/* 头部 */
+.header { margin-bottom: 28px; }
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0 20px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.taiji-icon {
+  font-size: 40px;
+  color: rgba(212, 162, 78, 0.7);
+  filter: drop-shadow(0 0 8px rgba(212,162,78,0.3));
+  animation: taijiPulse 4s ease-in-out infinite;
+}
+
+@keyframes taijiPulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+.header h1 {
+  font-size: 32px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+  color: #d4c5a9;
+  letter-spacing: 8px;
+  text-shadow: 0 0 20px rgba(212,162,78,0.15);
+  line-height: 1.2;
+}
+
+.header p {
+  color: #665;
+  font-size: 13px;
+  margin-top: 4px;
+  letter-spacing: 2px;
+}
+
+.header-right { display: flex; align-items: center; }
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+  color: #888;
+  letter-spacing: 2px;
+}
+
+.header-line {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(212, 162, 78, 0.4) 10%,
+    rgba(212, 162, 78, 0.2) 50%,
+    rgba(212, 162, 78, 0.4) 90%,
+    transparent 100%);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #555;
+  transition: all 0.3s;
+}
+
+.status-dot.connected {
+  background: #4A7C59;
+  box-shadow: 0 0 8px rgba(74, 124, 89, 0.5);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(74, 124, 89, 0.3); }
+  50% { box-shadow: 0 0 16px rgba(74, 124, 89, 0.6); }
+}
+
+/* 分区标题 */
+.section-divider {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+
+.section-icon {
+  color: rgba(212, 162, 78, 0.5);
+  font-size: 18px;
+}
+
+.section-text {
+  font-size: 15px;
+  color: #b8a88a;
+  letter-spacing: 4px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+  white-space: nowrap;
+}
+
+.section-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg,
+    rgba(212, 162, 78, 0.25),
+    rgba(212, 162, 78, 0.05),
+    transparent);
+}
+
+/* 主体 */
+.main {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ======== 评分组件 ======== */
+.score-section { grid-column: 1 / -1; }
+
+.score-card {
+  text-align: center;
+  padding: 32px 24px;
+  background: linear-gradient(180deg, rgba(30,28,26,0.95) 0%, rgba(22,22,30,0.9) 100%);
+  border: 1px solid rgba(212,162,78,0.2);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.score-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,162,78,0.4), transparent);
+}
+
+.score-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.score-label {
+  color: #b8a88a;
+  font-size: 16px;
+  letter-spacing: 6px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+}
+
+.decorative-line {
+  display: inline-block;
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,162,78,0.3), transparent);
+}
+
+.taiji-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.wuxing-ring {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  animation: slowSpin 60s linear infinite;
+}
+
+@keyframes slowSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.taiji-inner {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+
+.taiji-svg {
+  width: 200px;
+  height: 200px;
+  filter: drop-shadow(0 0 20px rgba(212,162,78,0.15));
+}
+
+.score-overlay {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.score-num {
+  font-size: 52px;
+  font-weight: 700;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+  text-shadow: 0 0 20px rgba(0,0,0,0.5);
+  white-space: nowrap;
+}
+
+.score-unit {
+  display: block;
+  font-size: 14px;
+  color: #888;
+  margin-top: -4px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+}
+
+.score-status { margin-top: 20px; }
+
+.status-text {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+  text-shadow: 0 0 10px currentColor;
+}
+
+/* ======== 数据卡片 ======== */
+.data-card {
+  position: relative;
+  padding: 20px;
+  background: rgba(30, 28, 26, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 162, 78, 0.15);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.data-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at top, rgba(212,162,78,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.data-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  border-color: rgba(212, 162, 78, 0.3);
+}
+
+.data-card.element-fire:hover { box-shadow: 0 12px 32px rgba(201, 64, 67, 0.2); }
+.data-card.element-metal:hover { box-shadow: 0 12px 32px rgba(200, 184, 138, 0.2); }
+.data-card.element-water:hover { box-shadow: 0 12px 32px rgba(58, 107, 140, 0.2); }
+.data-card.element-earth:hover { box-shadow: 0 12px 32px rgba(212, 162, 78, 0.2); }
+.data-card.element-wood:hover { box-shadow: 0 12px 32px rgba(74, 124, 89, 0.2); }
+
+.card-border-top,
+.card-border-bottom {
+  position: absolute;
+  left: 20px; right: 20px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(212, 162, 78, 0.3) 20%,
+    rgba(212, 162, 78, 0.3) 80%,
+    transparent 100%);
+}
+
+.card-border-top { top: 8px; }
+.card-border-bottom { bottom: 8px; }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.card-icon {
+  font-size: 20px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+  font-weight: 600;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(212, 162, 78, 0.1);
+}
+
+.card-title {
+  color: #b8a88a;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 2px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+}
+
+.value-wrapper {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.value {
+  font-size: 42px;
+  font-weight: 700;
+  color: #f5f0dc;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.unit {
+  font-size: 13px;
+  color: #888;
+  letter-spacing: 1px;
+}
+
+.progress-bar {
+  position: relative;
+  height: 6px;
+  background: rgba(58, 58, 58, 0.4);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.progress-glow {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  border-radius: 3px;
+  animation: glowMove 2s ease-in-out infinite;
+}
+
+@keyframes glowMove {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.status-bar { text-align: right; }
+
+.status-tag {
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 10px;
+  letter-spacing: 1px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+}
+
+.status-tag.normal { background: rgba(74, 124, 89, 0.2); color: #6db89c; }
+.status-tag.low, .status-tag.high { background: rgba(212, 162, 78, 0.2); color: #D4A24E; }
+.status-tag.unknown { background: rgba(100, 100, 100, 0.2); color: #888; }
+
+/* ======== 建议面板 ======== */
+.advice-section { grid-column: 1 / -1; }
+
+.advice-card {
+  position: relative;
+  background: rgba(30, 28, 26, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 162, 78, 0.2);
+  border-radius: 16px;
+  padding: 24px 20px;
+  overflow: hidden;
+}
+
+.advice-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(ellipse at top left, rgba(212,162,78,0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(201,64,67,0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.scroll-top,
+.scroll-bottom {
+  position: relative;
+  height: 4px;
+  margin: 0 20px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(212, 162, 78, 0.15) 15%,
+    rgba(212, 162, 78, 0.3) 50%,
+    rgba(212, 162, 78, 0.15) 85%,
+    transparent 100%);
+  border-radius: 2px;
+}
+
+.scroll-top { margin-bottom: 20px; }
+.scroll-bottom { margin-top: 20px; }
+
+.scroll-top::before,
+.scroll-top::after,
+.scroll-bottom::before,
+.scroll-bottom::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(212, 162, 78, 0.4);
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.scroll-top::before, .scroll-bottom::before { left: -3px; }
+.scroll-top::after, .scroll-bottom::after { right: -3px; }
+
+.advice-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.header-text {
+  font-size: 18px;
+  color: #b8a88a;
+  letter-spacing: 6px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+}
+
+.header-deco {
+  display: inline-block;
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 162, 78, 0.4));
+}
+
+.header-deco.right {
+  background: linear-gradient(90deg, rgba(212, 162, 78, 0.4), transparent);
+}
+
+.advice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.advice-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.advice-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.advice-item.fire { border-left-color: #C94043; }
+.advice-item.fire .advice-icon { color: #C94043; background: rgba(201,64,67,0.15); }
+
+.advice-item.metal { border-left-color: #C8B88A; }
+.advice-item.metal .advice-icon { color: #C8B88A; background: rgba(200,184,138,0.15); }
+
+.advice-item.wood { border-left-color: #4A7C59; }
+.advice-item.wood .advice-icon { color: #4A7C59; background: rgba(74,124,89,0.15); }
+
+.advice-item.earth { border-left-color: #D4A24E; }
+.advice-item.earth .advice-icon { color: #D4A24E; background: rgba(212,162,78,0.15); }
+
+.advice-item.water { border-left-color: #3A6B8C; }
+.advice-item.water .advice-icon { color: #3A6B8C; background: rgba(58,107,140,0.15); }
+
+.advice-item.spirit { border-left-color: #7b2cbf; }
+.advice-item.spirit .advice-icon { color: #7b2cbf; background: rgba(123,44,191,0.15); }
+
+.advice-item.summary { border-left-color: #b8a88a; }
+.advice-item.summary .advice-icon { color: #b8a88a; background: rgba(184,168,138,0.15); }
+
+.advice-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+}
+
+.advice-text {
+  font-size: 14px;
+  color: #ddd;
+  line-height: 1.8;
+  flex: 1;
+}
+
+/* 底部 */
+.footer {
+  text-align: center;
+  padding: 28px 0 16px;
+}
+
+.footer-line {
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,162,78,0.3), transparent);
+  margin: 0 auto 12px;
+}
+
+.footer span {
+  color: #555;
+  font-size: 13px;
+  font-family: "KaiTi", "楷体", "STKaiti", serif;
+  letter-spacing: 2px;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="ink-bg"></div>
+
+  <!-- 头部 -->
+  <header class="header">
+    <div class="header-content">
+      <div class="header-title">
+        <span class="taiji-icon">&#9775;</span>
+        <div>
+          <h1>悬丝辨息</h1>
+          <p>基于毫米波雷达的中医智能健康监测平台</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-status">
+          <div class="status-dot connected"></div>
+          <span>数据连通</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-line"></div>
+  </header>
+
+  <!-- 主体 -->
+  <main class="main">
+
+    <!-- 综合评分 -->
+    <div class="score-section">
+      <div class="score-card">
+        <div class="score-header">
+          <span class="decorative-line"></span>
+          <span class="score-label">综合健康评估</span>
+          <span class="decorative-line"></span>
+        </div>
+        <div class="taiji-wrapper">
+          <!-- 五行色环 -->
+          <svg class="wuxing-ring" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="94" fill="none" stroke="#2a2a2a" stroke-width="1.5"/>
+            <circle cx="100" cy="10" r="4" fill="#C94043"/>
+            <text x="100" y="6" text-anchor="middle" fill="#C94043" font-size="8" font-family="KaiTi,serif">心</text>
+            <circle cx="182" cy="56" r="4" fill="#4A7C59"/>
+            <text x="192" y="60" text-anchor="middle" fill="#4A7C59" font-size="8" font-family="KaiTi,serif">肝</text>
+            <circle cx="158" cy="152" r="4" fill="#3A6B8C"/>
+            <text x="168" y="158" text-anchor="middle" fill="#3A6B8C" font-size="8" font-family="KaiTi,serif">肾</text>
+            <circle cx="42" cy="152" r="4" fill="#C8B88A"/>
+            <text x="32" y="158" text-anchor="middle" fill="#C8B88A" font-size="8" font-family="KaiTi,serif">肺</text>
+            <circle cx="18" cy="56" r="4" fill="#D4A24E"/>
+            <text x="8" y="60" text-anchor="middle" fill="#D4A24E" font-size="8" font-family="KaiTi,serif">脾</text>
+          </svg>
+          <!-- 太极图 + 评分 -->
+          <div class="taiji-inner">
+            <svg class="taiji-svg" viewBox="0 0 200 200">
+              <path d="M 100,4 A 96,96 0 0,1 100,196 A 48,48 0 0,0 100,100 A 48,48 0 0,1 100,4" fill="#1b3a26"/>
+              <path d="M 100,4 A 96,96 0 0,0 100,196 A 48,48 0 0,1 100,100 A 48,48 0 0,0 100,4" fill="#e8f5e9"/>
+              <circle cx="100" cy="50" r="12" fill="#e8f5e9"/>
+              <circle cx="100" cy="150" r="12" fill="#1b3a26"/>
+              <circle cx="100" cy="100" r="96" fill="none" stroke="#4A7C59" stroke-width="3"/>
+            </svg>
+            <div class="score-overlay">
+              <span class="score-num" style="color:#4A7C59">78</span>
+              <span class="score-unit">分</span>
+            </div>
+          </div>
+        </div>
+        <div class="score-status">
+          <span class="status-text" style="color:#4A7C59">气血调和</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 体征监测区 -->
+    <div class="section-divider">
+      <span class="section-icon">&#10059;</span>
+      <span class="section-text">体征监测 · 心肺脉诊</span>
+      <span class="section-line"></span>
+    </div>
+
+    <!-- 心率 -->
+    <div class="data-card element-fire">
+      <div class="card-border-top"></div>
+      <div class="card-header">
+        <span class="card-icon" style="color:#C94043">心</span>
+        <span class="card-title">心率</span>
+      </div>
+      <div class="value-wrapper">
+        <span class="value">75</span>
+        <span class="unit">bpm</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:28.3%;background:linear-gradient(90deg,#C94043,#ff6b6b)"></div>
+        <div class="progress-glow" style="width:28.3%"></div>
+      </div>
+      <div class="status-bar"><span class="status-tag normal">调和</span></div>
+      <div class="card-border-bottom"></div>
+    </div>
+
+    <!-- 呼吸频率 -->
+    <div class="data-card element-metal">
+      <div class="card-border-top"></div>
+      <div class="card-header">
+        <span class="card-icon" style="color:#C8B88A">肺</span>
+        <span class="card-title">呼吸频率</span>
+      </div>
+      <div class="value-wrapper">
+        <span class="value">18</span>
+        <span class="unit">次/分</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:38.9%;background:linear-gradient(90deg,#C8B88A,#f5f0dc)"></div>
+        <div class="progress-glow" style="width:38.9%"></div>
+      </div>
+      <div class="status-bar"><span class="status-tag normal">调和</span></div>
+      <div class="card-border-bottom"></div>
+    </div>
+
+    <!-- 步态分析区 -->
+    <div class="section-divider">
+      <span class="section-icon">&#10059;</span>
+      <span class="section-text">步态分析 · 肝肾辨证</span>
+      <span class="section-line"></span>
+    </div>
+
+    <!-- 平均速度 -->
+    <div class="data-card element-water">
+      <div class="card-border-top"></div>
+      <div class="card-header">
+        <span class="card-icon" style="color:#3A6B8C">风</span>
+        <span class="card-title">平均速度</span>
+      </div>
+      <div class="value-wrapper">
+        <span class="value">110</span>
+        <span class="unit">cm/s</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:55%;background:linear-gradient(90deg,#3A6B8C,#74b9ff)"></div>
+        <div class="progress-glow" style="width:55%"></div>
+      </div>
+      <div class="status-bar"><span class="status-tag normal">调和</span></div>
+      <div class="card-border-bottom"></div>
+    </div>
+
+    <!-- 速度标准差 -->
+    <div class="data-card element-water">
+      <div class="card-border-top"></div>
+      <div class="card-header">
+        <span class="card-icon" style="color:#3A6B8C">风</span>
+        <span class="card-title">速度标准差</span>
+      </div>
+      <div class="value-wrapper">
+        <span class="value">8.5</span>
+        <span class="unit">cm/s</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:28%;background:linear-gradient(90deg,#3A6B8C,#74b9ff)"></div>
+        <div class="progress-glow" style="width:28%"></div>
+      </div>
+      <div class="status-bar"><span class="status-tag normal">调和</span></div>
+      <div class="card-border-bottom"></div>
+    </div>
+
+    <!-- 频率差 -->
+    <div class="data-card element-water">
+      <div class="card-border-top"></div>
+      <div class="card-header">
+        <span class="card-icon" style="color:#4A7C59">律</span>
+        <span class="card-title">频率差</span>
+      </div>
+      <div class="value-wrapper">
+        <span class="value">0.02</span>
+        <span class="unit">Hz</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:13%;background:linear-gradient(90deg,#3A6B8C,#74b9ff)"></div>
+        <div class="progress-glow" style="width:13%"></div>
+      </div>
+      <div class="status-bar"><span class="status-tag normal">调和</span></div>
+      <div class="card-border-bottom"></div>
+    </div>
+
+    <!-- 步频 -->
+    <div class="data-card element-water">
+      <div class="card-border-top"></div>
+      <div class="card-header">
+        <span class="card-icon" style="color:#4A7C59">步</span>
+        <span class="card-title">步频</span>
+      </div>
+      <div class="value-wrapper">
+        <span class="value">1.8</span>
+        <span class="unit">Hz</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:60%;background:linear-gradient(90deg,#3A6B8C,#74b9ff)"></div>
+        <div class="progress-glow" style="width:60%"></div>
+      </div>
+      <div class="status-bar"><span class="status-tag normal">调和</span></div>
+      <div class="card-border-bottom"></div>
+    </div>
+
+    <!-- 环境感知区 -->
+    <div class="section-divider">
+      <span class="section-icon">&#10059;</span>
+      <span class="section-text">环境感知 · 六淫辨证</span>
+      <span class="section-line"></span>
+    </div>
+
+    <!-- 环境温度 -->
+    <div class="data-card element-earth">
+      <div class="card-border-top"></div>
+      <div class="card-header">
+        <span class="card-icon" style="color:#C94043">温</span>
+        <span class="card-title">环境温度</span>
+      </div>
+      <div class="value-wrapper">
+        <span class="value">26</span>
+        <span class="unit">&deg;C</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:60%;background:linear-gradient(90deg,#D4A24E,#ffe66d)"></div>
+        <div class="progress-glow" style="width:60%"></div>
+      </div>
+      <div class="status-bar"><span class="status-tag normal">调和</span></div>
+      <div class="card-border-bottom"></div>
+    </div>
+
+    <!-- 环境湿度 -->
+    <div class="data-card element-earth">
+      <div class="card-border-top"></div>
+      <div class="card-header">
+        <span class="card-icon" style="color:#3A6B8C">湿</span>
+        <span class="card-title">环境湿度</span>
+      </div>
+      <div class="value-wrapper">
+        <span class="value">62</span>
+        <span class="unit">%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:62%;background:linear-gradient(90deg,#D4A24E,#ffe66d)"></div>
+        <div class="progress-glow" style="width:62%"></div>
+      </div>
+      <div class="status-bar"><span class="status-tag normal">调和</span></div>
+      <div class="card-border-bottom"></div>
+    </div>
+
+    <!-- 气压 -->
+    <div class="data-card element-wood">
+      <div class="card-border-top"></div>
+      <div class="card-header">
+        <span class="card-icon" style="color:#4A7C59">气</span>
+        <span class="card-title">气压</span>
+      </div>
+      <div class="value-wrapper">
+        <span class="value">1013</span>
+        <span class="unit">hPa</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:63%;background:linear-gradient(90deg,#4A7C59,#a8edea)"></div>
+        <div class="progress-glow" style="width:63%"></div>
+      </div>
+      <div class="status-bar"><span class="status-tag normal">调和</span></div>
+      <div class="card-border-bottom"></div>
+    </div>
+
+    <!-- 声音强度 -->
+    <div class="data-card element-wood">
+      <div class="card-border-top"></div>
+      <div class="card-header">
+        <span class="card-icon" style="color:#3A6B8C">闻</span>
+        <span class="card-title">声音强度</span>
+      </div>
+      <div class="value-wrapper">
+        <span class="value">42</span>
+        <span class="unit">dB</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:35%;background:linear-gradient(90deg,#4A7C59,#a8edea)"></div>
+        <div class="progress-glow" style="width:35%"></div>
+      </div>
+      <div class="status-bar"><span class="status-tag normal">调和</span></div>
+      <div class="card-border-bottom"></div>
+    </div>
+
+    <!-- 辨证建议 -->
+    <div class="advice-section">
+      <div class="advice-card">
+        <div class="scroll-top"></div>
+        <div class="advice-header">
+          <span class="header-deco"></span>
+          <span class="header-text">辨证论治</span>
+          <span class="header-deco right"></span>
+        </div>
+        <div class="advice-list">
+          <div class="advice-item fire">
+            <div class="advice-icon">心</div>
+            <span class="advice-text">【脉象分析】心率75次/分，脉率适中，节律匀齐，属平脉之象，心气充沛，血脉调和。</span>
+          </div>
+          <div class="advice-item metal">
+            <div class="advice-icon">肺</div>
+            <span class="advice-text">【呼吸辨证】呼吸18次/分，肺气宣降有序，气息均匀，肺主气功能正常。</span>
+          </div>
+          <div class="advice-item wood">
+            <div class="advice-icon">肝</div>
+            <span class="advice-text">【步态分析】步态稳健，步频1.8Hz，平均速度110cm/s，肝肾协调，筋骨得养。</span>
+          </div>
+          <div class="advice-item earth">
+            <div class="advice-icon">脾</div>
+            <span class="advice-text">【六淫辨证】环境温度26°C，湿度62%，温湿度适宜，无明显六淫外感之象。气压1013hPa，处于正常范围。</span>
+          </div>
+          <div class="advice-item water">
+            <div class="advice-icon">肾</div>
+            <span class="advice-text">【闻诊分析】环境声音42dB，声息平和，无明显异常声响干扰。</span>
+          </div>
+          <div class="advice-item spirit">
+            <div class="advice-icon">魂</div>
+            <span class="advice-text">【中医智能辨证】综合各项指标，未见明显七情过极之象，情志调和，建议保持规律作息，适度运动。</span>
+          </div>
+          <div class="advice-item summary">
+            <div class="advice-icon">总</div>
+            <span class="advice-text">【综合评估】综合评分78分，整体状况良好，各项指标基本在正常范围内，注意劳逸结合，顺应四时变化调养。</span>
+          </div>
+        </div>
+        <div class="scroll-bottom"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 底部 -->
+  <footer class="footer">
+    <div class="footer-line"></div>
+    <span>时辰：2026年4月20日 14:30:00</span>
+  </footer>
+</div>
+</body>
+</html>

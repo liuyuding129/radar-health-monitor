@@ -1,0 +1,69 @@
+# 数据源配置
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    druid:
+      # 主库数据源 123.249.110.70:3307/jy_management jinyang1401
+      master:
+        url: jdbc:mysql://124.220.212.6:3306/radar_mqtt?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&autoReconnect=true&failOverReadOnly=false
+        username: root
+        password: hVQFfUykkXdK3dqsSfFXcTU5j/1bdzyX
+      # 从库数据源
+      slave:
+        enabled: false
+        url:
+        username:
+        password:
+      # 连接池核心配置
+      initialSize: 5
+      minIdle: 5        # 降低最小空闲连接，避免过多空闲连接
+      maxActive: 20
+      maxWait: 60000
+      connectTimeout: 30000
+      socketTimeout: 60000
+
+      # 连接检测和保活配置（关键优化）
+      timeBetweenEvictionRunsMillis: 30000      # 缩短检测间隔到30秒
+      minEvictableIdleTimeMillis: 180000        # 3分钟
+      maxEvictableIdleTimeMillis: 600000        # 10分钟
+
+      # 连接验证配置（关键优化）
+      validationQuery: SELECT 1
+      validationQueryTimeout: 3000
+      testWhileIdle: true
+      testOnBorrow: true        # 改为true，确保获取的连接是有效的
+      testOnReturn: false
+
+      # 连接保活配置（新增）
+      keepAlive: true
+      keepAliveBetweenTimeMillis: 30000         # 30秒保活一次
+      phyTimeoutMillis: 600000                  # 物理连接超时10分钟
+
+      # 连接泄漏检测
+      removeAbandoned: true
+      removeAbandonedTimeout: 180
+      logAbandoned: true
+
+      # 连接池预热
+      poolPreparedStatements: true
+      maxPoolPreparedStatementPerConnectionSize: 20
+
+      # 监控配置
+      webStatFilter:
+        enabled: true
+      statViewServlet:
+        enabled: true
+        allow:
+        url-pattern: /druid/*
+        login-username: jy
+        login-password: 123456
+      filter:
+        stat:
+          enabled: true
+          log-slow-sql: true
+          slow-sql-millis: 1000
+          merge-sql: true
+        wall:
+          config:
+            multi-statement-allow: true
