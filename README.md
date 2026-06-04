@@ -4,7 +4,11 @@
 >
 > 无感颐养 — 基于边缘AI的模块化非接触中医智能健康看护装备 · CRAIC 第二十八届中国机器人及人工智能大赛 · 医疗健康装备赛道
 
-> ⚠️ **Disclaimer**: This project has been submitted to multiple academic competitions. If you are participating in the same or similar competitions, please do NOT copy or reuse the code, documentation, or ideas directly. Use it only as a reference for learning purposes.
+> ⚠️ **Disclaimer / 免责声明**:
+>
+> 本项目已提交多个学术竞赛，如果你正在参加相同或类似的比赛，请勿直接复制或使用本项目的代码、文档或创意，仅供学习参考。
+>
+> This project has been submitted to multiple academic competitions. If you are participating in the same or similar competitions, please do NOT copy or reuse the code, documentation, or ideas directly. Use it only as a reference for learning purposes.
 
 ## 项目简介
 
